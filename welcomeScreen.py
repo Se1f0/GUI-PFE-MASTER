@@ -65,7 +65,6 @@ class ScanViwerScreen(QMainWindow):
         self.threadLoad = ThreadClass(self.path,1,parent=None)
         self.threadLoad.start()
         self.threadLoad.any_signal.connect(self.getThreadResults)
-        self.actionView_3D_scan.triggered.connect(self.goTo3D)
         self.threadPlay = None
 
     def goTo3D(self):
@@ -83,7 +82,9 @@ class ScanViwerScreen(QMainWindow):
         self.metaTitle.setVisible(True)
         self.metaDataTable.setVisible(True)
         self.goToPreprocessButton.setVisible(True)
+        self.preprocIcon.setVisible(True)
         self.frame.setVisible(True)
+        self.metaDataIcon.setVisible(True)
         self.image.setVisible(True)
         self.imageName.setVisible(True)
         self.index.setVisible(True)
@@ -104,6 +105,7 @@ class ScanViwerScreen(QMainWindow):
         self.actionpause.triggered.connect(self.pause)
         self.actionZoom_In.triggered.connect(self.zoomIn)
         self.actionReset_Zoom.triggered.connect(self.zoomReset)
+        self.actionView_3D_scan.triggered.connect(self.goTo3D)
         print("end")
 
     def mouseReleaseEvent(self, event):
@@ -124,7 +126,7 @@ class ScanViwerScreen(QMainWindow):
         self.updateImage()
 
     def zoomIn(self):
-        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/icons/bonus/icons-24/magnifier-zoom-in.png'))
+        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/Tool bar/zoom-in.png'))
         self.image.setCursor(CURSOR_NEW)
         self.zooming = True
     
@@ -184,7 +186,9 @@ class ScanViwerScreen(QMainWindow):
         self.toolBar.setVisible(False)
         self.metaTitle.setVisible(False)
         self.metaDataTable.setVisible(False)
+        self.metaDataIcon.setVisible(False)
         self.goToPreprocessButton.setVisible(False)
+        self.preprocIcon.setVisible(False)
         self.frame.setVisible(False)
         self.image.setVisible(False)
         self.imageName.setVisible(False)
@@ -333,7 +337,7 @@ class ProcessedScanViwerScreen(QMainWindow):
 
         self.loadingLabel.setText("Preprocessing scan")
         self.loadingLabel.adjustSize()
-        movie = QtGui.QMovie('assets\loading.gif')
+        movie = QtGui.QMovie('assets\loading3.gif')
         self.loading.setMovie(movie)
         movie.start()
 

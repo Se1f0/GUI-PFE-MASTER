@@ -54,7 +54,7 @@ class StlViewer(QMainWindow):
 
     def loadLoadingScreen(self):
         self.loadingLabel.adjustSize()
-        movie = QtGui.QMovie('assets\loading.gif')
+        movie = QtGui.QMovie('assets\giphy.gif')
         self.loading.setMovie(movie)
         movie.start()
 
