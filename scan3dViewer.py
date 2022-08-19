@@ -43,9 +43,6 @@ class StlViewer(QMainWindow):
         self.threadLoad = ThreadClass(self.predImg,parent=None)
         self.threadLoad.start()
         self.threadLoad.any_signal.connect(self.getThreadResults)
-
-        # self.initUI()
-        # self.showSTL()
     
     def getThreadResults(self,data):
         self.mesh = data
@@ -77,44 +74,3 @@ class StlViewer(QMainWindow):
         g.setSize(1000, 1000)
         g.setSpacing(100, 100)
         self.viewer.addItem(g)
-    
-    # def showSTL(self):
-        # points, faces = self.loadSTL()
-        # meshdata = gl.MeshData(vertexes=self.points, faces=self.faces)
-        # mesh = gl.GLMeshItem(meshdata=meshdata, smooth=True, drawFaces=True, drawEdges=True, edgeColor=(0.7, 0.7, 0.7, 1))
-        # mesh.translate(100.0,0.0,0.0)
-        # mesh.setColor(QtGui.QColor(200, 200, 200))
-        
-    
-    # def loadSTL(self):
-    #     m = self.dataToMesh()
-    #     m.rotate([0.0,1.0,0.0],math.radians(90))
-    #     shape = m.points.shape
-    #     points = m.points.reshape(-1, 3)
-    #     faces = np.arange(points.shape[0]).reshape(-1, 3)
-    #     return points, faces
-
-    # def dataToMesh(self):
-    #     print(self.predImg.shape)
-    #     vertices,faces,_,_ = marching_cubes(self.predImg)
-    #     mm = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
-    #     for i, f in enumerate(faces):
-    #         for j in range(3):
-    #             mm.vectors[i][j] = vertices[f[j],:]
-    #     return mm
-
-
-
-# main
-# app = QApplication(sys.argv)
-# welcome = StlViewer()
-# widget = QStackedWidget()
-# widget.addWidget(welcome)
-# widget.setFixedHeight(900)
-# widget.setFixedWidth(700)
-# widget.setWindowTitle("3D Scan Viewer")
-# widget.show()
-# try:
-#     sys.exit(app.exec_())
-# except:
-#     print("Exiting")
