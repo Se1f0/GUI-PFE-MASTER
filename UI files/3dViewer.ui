@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>700</width>
+    <height>900</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>700</width>
+      <height>900</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget#widget{
+background-color: qlineargradient(spread:pad, x1:0.064, y1:0.107727, x2:0.869, y2:0.79, stop:0 rgba(23, 26, 33, 255), stop:0.806147 rgba(42, 71, 94, 255));}</string>
+    </property>
+    <widget class="QLabel" name="loadingLabel">
+     <property name="geometry">
+      <rect>
+       <x>25</x>
+       <y>230</y>
+       <width>650</width>
+       <height>100</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Verdana</family>
+       <pointsize>36</pointsize>
+       <weight>50</weight>
+       <italic>false</italic>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(199, 213, 224);
+font: 36pt &quot;Verdana&quot;;</string>
+     </property>
+     <property name="text">
+      <string>Constructing the 3D model
+        Please wait...</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="loading">
+     <property name="geometry">
+      <rect>
+       <x>286</x>
+       <y>386</y>
+       <width>128</width>
+       <height>128</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

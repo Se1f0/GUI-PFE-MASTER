@@ -9,6 +9,9 @@ from skimage.morphology import convex_hull_image
 from scipy.ndimage.morphology import binary_dilation,generate_binary_structure
 import scipy.ndimage
 from skimage import measure
+import math
+from skimage.measure import marching_cubes
+from stl import mesh
 
 def load_itk_image(filename):
         with open(filename) as f:
@@ -302,7 +305,7 @@ def loadImage(path):
     img3D = np.zeros((im.shape[0],im.shape[1],im.shape[2],3),dtype=im.dtype)
     for z in range(im.shape[0]):
         img3D[z] = cv.cvtColor(im[z],cv.COLOR_GRAY2RGB)
-    return img3D,initIndex
+    return img3D,initIndex,im
 
 def getMetaDataMhd(path):
     metaData = dict()
@@ -327,3 +330,18 @@ def getMetaDataDcm(path):
         metaData[dsi[i[0] , i[1]].name] = str(dsi[i[0] , i[1]].value)
     return metaData
 
+def loadSTL(scan):
+        m = dataToMesh(scan)
+        m.rotate([0.0,1.0,0.0],math.radians(90))
+        shape = m.points.shape
+        points = m.points.reshape(-1, 3)
+        faces = np.arange(points.shape[0]).reshape(-1, 3)
+        return points, faces
+
+def dataToMesh(scan):
+    vertices,faces,_,_ = marching_cubes(scan)
+    mm = mesh.Mesh(np.zeros(faces.shape[0], dtype=mesh.Mesh.dtype))
+    for i, f in enumerate(faces):
+        for j in range(3):
+            mm.vectors[i][j] = vertices[f[j],:]
+    return mm

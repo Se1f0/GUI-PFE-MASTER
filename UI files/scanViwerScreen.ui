@@ -57,6 +57,12 @@ background-color: qlineargradient(spread:pad, x1:0.064, y1:0.107727, x2:0.869, y
       <property name="text">
        <string/>
       </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
      </widget>
      <widget class="QLabel" name="imageName">
       <property name="geometry">
@@ -283,10 +289,15 @@ font: 36pt &quot;Verdana&quot;;</string>
    <addaction name="separator"/>
    <addaction name="actionLeft_Slice"/>
    <addaction name="actionNext_Slice"/>
-   <addaction name="actionReset"/>
    <addaction name="separator"/>
    <addaction name="actionPlay"/>
    <addaction name="actionpause"/>
+   <addaction name="actionReset"/>
+   <addaction name="separator"/>
+   <addaction name="actionZoom_In"/>
+   <addaction name="actionReset_Zoom"/>
+   <addaction name="separator"/>
+   <addaction name="actionView_3D_scan"/>
   </widget>
   <action name="actionNext_Slice">
    <property name="icon">
@@ -328,24 +339,6 @@ font: 36pt &quot;Verdana&quot;;</string>
    </property>
    <property name="toolTip">
     <string>Zoom in the slice</string>
-   </property>
-   <property name="shortcut">
-    <string>+</string>
-   </property>
-  </action>
-  <action name="actionZoom_out">
-   <property name="icon">
-    <iconset>
-     <normaloff>../assets/icons/bonus/icons-24/magnifier-zoom-out.png</normaloff>../assets/icons/bonus/icons-24/magnifier-zoom-out.png</iconset>
-   </property>
-   <property name="text">
-    <string>Zoom out</string>
-   </property>
-   <property name="toolTip">
-    <string>Zoom out the slice</string>
-   </property>
-   <property name="shortcut">
-    <string>-</string>
    </property>
   </action>
   <action name="actionReset_Zoom">
@@ -421,6 +414,15 @@ font: 36pt &quot;Verdana&quot;;</string>
    </property>
    <property name="toolTip">
     <string>Go back to the upload Screen</string>
+   </property>
+  </action>
+  <action name="actionView_3D_scan">
+   <property name="icon">
+    <iconset>
+     <normaloff>../assets/4236727.png</normaloff>../assets/4236727.png</iconset>
+   </property>
+   <property name="text">
+    <string>View 3D scan</string>
    </property>
   </action>
  </widget>

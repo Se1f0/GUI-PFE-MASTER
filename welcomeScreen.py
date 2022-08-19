@@ -1,6 +1,7 @@
 import sys
 import time
 from tkinter import Image
+from tkinter.messagebox import NO
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QFileDialog, QMainWindow, QTableWidgetItem, QTableWidget
 from PyQt5 import QtGui
@@ -8,6 +9,7 @@ from PyQt5.QtGui import QPixmap, QImage
 from PyQt5 import uic
 from tools import *
 from prepare import preprocessScan
+from scan3dViewer import StlViewer
 
 class WelcomeScreen(QDialog):
     def __init__(self):
@@ -52,18 +54,27 @@ class ScanViwerScreen(QMainWindow):
 
         self.loadLoadingScreen()
 
+        self.w = None
         self.path = path
         self.innitIndex = -1
         self.labelImage = None
+        self.labelImageOriginal = None
+        self.zooming = False
+        self.scanOriginal = None
 
         self.threadLoad = ThreadClass(self.path,1,parent=None)
         self.threadLoad.start()
         self.threadLoad.any_signal.connect(self.getThreadResults)
-
+        self.actionView_3D_scan.triggered.connect(self.goTo3D)
         self.threadPlay = None
 
+    def goTo3D(self):
+        if self.w is None:
+            self.w = StlViewer(self.scanOriginal)
+        self.w.show()
+
     def getThreadResults(self,data):
-        self.labelImage,self.innitIndex = data
+        self.labelImage,self.innitIndex,self.scanOriginal = data
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
@@ -77,7 +88,8 @@ class ScanViwerScreen(QMainWindow):
         self.imageName.setVisible(True)
         self.index.setVisible(True)
         self.verticalSlider.setVisible(True)
-        
+        self.actionReset_Zoom.setEnabled(False)
+
         self.loadInfos()
 
         self.actionNext_Slice.triggered.connect(self.slideRight)
@@ -90,8 +102,57 @@ class ScanViwerScreen(QMainWindow):
         self.goToPreprocessButton.clicked.connect(self.goToPreprocessed)
         self.actionPlay.triggered.connect(self.play)
         self.actionpause.triggered.connect(self.pause)
+        self.actionZoom_In.triggered.connect(self.zoomIn)
+        self.actionReset_Zoom.triggered.connect(self.zoomReset)
         print("end")
 
+    def mouseReleaseEvent(self, event):
+        imageRectX,imageRectY = (self.image.x()+self.frame.x(),self.image.y()+self.frame.y()+34)
+        if  (event.pos().x() <= imageRectX+512 and event.pos().x() >= imageRectX) and (event.pos().y() <= imageRectY+512 and event.pos().y() >= imageRectY) and self.zooming:
+            self.labelImageOriginal = self.labelImage
+            print(event.pos().x()-imageRectX,event.pos().y()-imageRectY)
+            self.applyZoomIn((self.innitIndex,event.pos().y()-imageRectY,event.pos().x()-imageRectX),128)
+            self.zooming = False
+            self.actionZoom_In.setEnabled(False)
+    
+    def zoomReset(self):
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.image.setCursor(CURSOR_NEW)
+        self.labelImage = self.labelImageOriginal
+        self.actionZoom_In.setEnabled(True)
+        self.actionReset_Zoom.setEnabled(False)
+        self.updateImage()
+
+    def zoomIn(self):
+        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/icons/bonus/icons-24/magnifier-zoom-in.png'))
+        self.image.setCursor(CURSOR_NEW)
+        self.zooming = True
+    
+    def applyZoomIn(self,cm,ratio):
+        rm=ratio//2
+        xm=cm[2]-rm
+        ym=cm[1]-rm
+        if(ym<0):
+            ym=0
+            ymp=ratio
+        else:
+            ymp=ym+ratio
+            if(ymp>self.labelImage.shape[1]):
+                ymp=self.labelImage.shape[1]
+                ym=ymp-ratio
+                
+        if(xm<0):
+            xm=0
+            xmp=ratio
+        else:
+            xmp=xm+ratio
+            if(xmp>self.labelImage.shape[2]):
+                xmp=self.labelImage.shape[2]
+                xm=xmp-ratio
+        self.labelImage = np.copy(self.labelImage[::,ym:ymp,xm:xmp])
+        self.actionReset_Zoom.setEnabled(True)
+        self.updateImage()
+    
     def play(self):
         self.actionpause.setEnabled(True)
         self.actionPlay.setEnabled(False)
@@ -211,8 +272,8 @@ class ThreadClass(QtCore.QThread):
     def run(self):
         print("starting")
         if self.screen == 1:
-            scan,index = loadImage(self.path)
-            self.any_signal.emit((scan,index))
+            scan,index,scanOriginal = loadImage(self.path)
+            self.any_signal.emit((scan,index,scanOriginal))
         else:
             scan = preprocessScan(self.path)
             self.any_signal.emit(scan)
@@ -254,6 +315,9 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.path = path
         self.innitIndex = 0
         self.im = None
+        self.labelImageOriginal = None
+        self.zooming = False
+        self.w = None
         
         self.threadLoad = ThreadClass(self.path,2,parent=None)
         self.threadLoad.start()
@@ -274,9 +338,9 @@ class ProcessedScanViwerScreen(QMainWindow):
         movie.start()
 
     def loadInfos(self):
-        img3D = np.zeros((self.im.shape[1],self.im.shape[2],self.im.shape[3],3),dtype=self.im.dtype)
+        img3D = np.zeros((self.im.shape[1],512,512,3),dtype=self.im.dtype)
         for z in range(self.im.shape[1]):
-            img3D[z] = cv.cvtColor(self.im[0][z],cv.COLOR_GRAY2RGB)
+            img3D[z] = cv.resize(cv.cvtColor(self.im[0][z],cv.COLOR_GRAY2RGB),(512,512))
         self.labelImage = img3D
         self.updateImage()
         self.imageName.setText(self.path.split("/")[-1])
@@ -298,6 +362,7 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.imageName.setVisible(True)
         self.index.setVisible(True)
         self.verticalSlider.setVisible(True)
+        self.actionReset_Zoom.setEnabled(False)
 
         self.actionNext_Slice.triggered.connect(self.slideRight)
         self.actionLeft_Slice.triggered.connect(self.slideLeft)
@@ -306,7 +371,93 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.verticalSlider.setMinimum(0)
         self.verticalSlider.setMaximum(self.labelImage.shape[0]-1)
         self.verticalSlider.valueChanged.connect(self.slide)
+        self.actionPlay.triggered.connect(self.play)
+        self.actionpause.triggered.connect(self.pause)
+        self.actionZoom_In.triggered.connect(self.zoomIn)
+        self.actionReset_Zoom.triggered.connect(self.zoomReset)
+        self.actionView_3D_scan.triggered.connect(self.goTo3D)
         print("end")
+
+    def goTo3D(self):
+        if self.w is None:
+            self.w = StlViewer(self.im[0])
+        self.w.show()
+    
+    def mouseReleaseEvent(self, event):
+        imageRectX,imageRectY = (self.image.x(),self.image.y()+34)
+        if  (event.pos().x() <= imageRectX+512 and event.pos().x() >= imageRectX) and (event.pos().y() <= imageRectY+512 and event.pos().y() >= imageRectY) and self.zooming:
+            self.labelImageOriginal = self.labelImage
+            print(event.pos().x()-imageRectX,event.pos().y()-imageRectY)
+            self.applyZoomIn((self.innitIndex,event.pos().y()-imageRectY,event.pos().x()-imageRectX),128)
+            self.zooming = False
+            self.actionZoom_In.setEnabled(False)
+            print(self.labelImage.shape)
+    
+    def zoomReset(self):
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.image.setCursor(CURSOR_NEW)
+        self.labelImage = self.labelImageOriginal
+        self.actionZoom_In.setEnabled(True)
+        self.actionReset_Zoom.setEnabled(False)
+        self.updateImage()
+
+    def zoomIn(self):
+        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/icons/bonus/icons-24/magnifier-zoom-in.png'))
+        self.image.setCursor(CURSOR_NEW)
+        self.zooming = True
+    
+    def applyZoomIn(self,cm,ratio):
+        rm=ratio//2
+        xm=cm[2]-rm
+        ym=cm[1]-rm
+        if(ym<0):
+            ym=0
+            ymp=ratio
+        else:
+            ymp=ym+ratio
+            if(ymp>self.labelImage.shape[1]):
+                ymp=self.labelImage.shape[1]
+                ym=ymp-ratio
+                
+        if(xm<0):
+            xm=0
+            xmp=ratio
+        else:
+            xmp=xm+ratio
+            if(xmp>self.labelImage.shape[2]):
+                xmp=self.labelImage.shape[2]
+                xm=xmp-ratio
+        self.labelImage = np.copy(self.labelImage[::,ym:ymp,xm:xmp])
+        self.actionReset_Zoom.setEnabled(True)
+        self.updateImage()
+    
+    def play(self):
+        self.actionpause.setEnabled(True)
+        self.actionPlay.setEnabled(False)
+        self.actionNext_Slice.setEnabled(False)
+        self.actionLeft_Slice.setEnabled(False)
+        self.actionReset.setEnabled(False)
+        self.verticalSlider.setEnabled(False)
+        self.verticalSlider.setEnabled(False)
+        self.actionGoBack.setEnabled(False)
+        self.actionView_3D_scan.setEnabled(False)
+        self.threadPlay = PlayThread(parent=None)
+        self.threadPlay.start()
+        self.threadPlay.any_signal.connect(self.getPlayThreadResults)
+    
+    def getPlayThreadResults(self,isReady):
+        self.slideRight()
+
+    def pause(self):
+        self.threadPlay.stop()
+        self.actionpause.setEnabled(False)
+        self.actionPlay.setEnabled(True)
+        self.actionNext_Slice.setEnabled(True)
+        self.actionLeft_Slice.setEnabled(True)
+        self.actionReset.setEnabled(True)
+        self.verticalSlider.setEnabled(True)
+        self.actionGoBack.setEnabled(True)
+        self.actionView_3D_scan.setEnabled(True)
 
     def updateImage(self):
         pixmap = QImage(self.labelImage[self.innitIndex], self.labelImage.shape[2], self.labelImage.shape[1], self.labelImage.shape[2]*3, QImage.Format_RGB888)
@@ -320,7 +471,9 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.updateImage()
     
     def slideRight(self):
-        self.innitIndex = min(self.labelImage.shape[0]-1,self.innitIndex+1)
+        self.innitIndex += 1
+        if(self.innitIndex >= self.labelImage.shape[0]):
+            self.innitIndex = 0
         self.updateImage()
     
     def slideLeft(self):
