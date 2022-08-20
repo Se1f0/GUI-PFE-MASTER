@@ -1,7 +1,5 @@
 import sys
 import time
-from tkinter import Image
-from tkinter.messagebox import NO
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QFileDialog, QMainWindow, QTableWidgetItem, QTableWidget
 from PyQt5 import QtGui

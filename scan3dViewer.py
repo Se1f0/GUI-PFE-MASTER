@@ -1,7 +1,4 @@
-import math
-import sys
 from pyqtgraph.Qt import QtCore, QtGui
-import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from skimage.measure import marching_cubes
 
@@ -9,8 +6,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *  
 
-import numpy as np
-from stl import mesh
 from PyQt5 import uic
 from tools import loadSTL
 
