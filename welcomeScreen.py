@@ -77,6 +77,8 @@ class ScanViwerScreen(QMainWindow):
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.widget.setCursor(CURSOR_NEW)
 
         self.toolBar.setVisible(True)
         self.metaTitle.setVisible(True)
@@ -195,7 +197,8 @@ class ScanViwerScreen(QMainWindow):
         self.index.setVisible(False)
         self.verticalSlider.setVisible(False)
 
-
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
+        self.widget.setCursor(CURSOR_NEW)
         self.loadingLabel.setText("Loading")
         self.loadingLabel.adjustSize()
         movie = QtGui.QMovie('assets\loading.gif')
@@ -335,9 +338,12 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.index.setVisible(False)
         self.verticalSlider.setVisible(False)
 
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
+        self.widget.setCursor(CURSOR_NEW)
+
         self.loadingLabel.setText("Preprocessing scan")
         self.loadingLabel.adjustSize()
-        movie = QtGui.QMovie('assets\loading3.gif')
+        movie = QtGui.QMovie('assets\loading.gif')
         self.loading.setMovie(movie)
         movie.start()
 
@@ -357,6 +363,9 @@ class ProcessedScanViwerScreen(QMainWindow):
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
+
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.widget.setCursor(CURSOR_NEW)
 
         self.loadInfos()
 
@@ -406,7 +415,7 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.updateImage()
 
     def zoomIn(self):
-        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/icons/bonus/icons-24/magnifier-zoom-in.png'))
+        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/Tool bar/zoom-in.png'))
         self.image.setCursor(CURSOR_NEW)
         self.zooming = True
     

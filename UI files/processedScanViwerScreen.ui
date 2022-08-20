@@ -169,7 +169,14 @@ font: 36pt &quot;Verdana&quot;;</string>
     <string>toolBar</string>
    </property>
    <property name="styleSheet">
-    <string notr="true"/>
+    <string notr="true">QToolBar#toolBar{
+background-color: qlineargradient(spread:reflect, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(23, 26, 33, 255), stop:1 rgba(42, 71, 94, 255));}</string>
+   </property>
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>true</bool>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -224,7 +231,7 @@ font: 36pt &quot;Verdana&quot;;</string>
   <action name="actionZoom_In">
    <property name="icon">
     <iconset>
-     <normaloff>../assets/icons/bonus/icons-24/magnifier-zoom-in.png</normaloff>../assets/icons/bonus/icons-24/magnifier-zoom-in.png</iconset>
+     <normaloff>../assets/Tool bar/zoom-in.png</normaloff>../assets/Tool bar/zoom-in.png</iconset>
    </property>
    <property name="text">
     <string>Zoom In</string>
@@ -254,7 +261,7 @@ font: 36pt &quot;Verdana&quot;;</string>
   <action name="actionReset_Zoom">
    <property name="icon">
     <iconset>
-     <normaloff>../assets/icons/bonus/icons-24/magnifier-zoom-fit.png</normaloff>../assets/icons/bonus/icons-24/magnifier-zoom-fit.png</iconset>
+     <normaloff>../assets/Tool bar/zoom-out.png</normaloff>../assets/Tool bar/zoom-out.png</iconset>
    </property>
    <property name="text">
     <string>Reset Zoom</string>
@@ -269,7 +276,7 @@ font: 36pt &quot;Verdana&quot;;</string>
   <action name="actionPlay">
    <property name="icon">
     <iconset>
-     <normaloff>../assets/icons/icons/control.png</normaloff>../assets/icons/icons/control.png</iconset>
+     <normaloff>../assets/Tool bar/play.png</normaloff>../assets/Tool bar/play.png</iconset>
    </property>
    <property name="text">
     <string>Play</string>
@@ -287,7 +294,7 @@ font: 36pt &quot;Verdana&quot;;</string>
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../assets/icons/icons/control-pause.png</normaloff>../assets/icons/icons/control-pause.png</iconset>
+     <normaloff>../assets/Tool bar/pause-button.png</normaloff>../assets/Tool bar/pause-button.png</iconset>
    </property>
    <property name="text">
     <string>Pause</string>
@@ -302,7 +309,7 @@ font: 36pt &quot;Verdana&quot;;</string>
   <action name="actionReset">
    <property name="icon">
     <iconset>
-     <normaloff>../assets/icons/bonus/icons-24/arrow-circle-225.png</normaloff>../assets/icons/bonus/icons-24/arrow-circle-225.png</iconset>
+     <normaloff>../assets/Tool bar/reloading.png</normaloff>../assets/Tool bar/reloading.png</iconset>
    </property>
    <property name="text">
     <string>Reset</string>
@@ -317,7 +324,7 @@ font: 36pt &quot;Verdana&quot;;</string>
   <action name="actionGoBack">
    <property name="icon">
     <iconset>
-     <normaloff>../assets/icons/bonus/icons-24/arrow-curve-180.png</normaloff>../assets/icons/bonus/icons-24/arrow-curve-180.png</iconset>
+     <normaloff>../assets/Tool bar/back.png</normaloff>../assets/Tool bar/back.png</iconset>
    </property>
    <property name="text">
     <string>GoBack</string>
@@ -329,7 +336,7 @@ font: 36pt &quot;Verdana&quot;;</string>
   <action name="actionView_3D_scan">
    <property name="icon">
     <iconset>
-     <normaloff>../assets/4236727.png</normaloff>../assets/4236727.png</iconset>
+     <normaloff>../assets/Tool bar/3d-printer.png</normaloff>../assets/Tool bar/3d-printer.png</iconset>
    </property>
    <property name="text">
     <string>View 3D scan</string>
