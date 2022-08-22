@@ -123,11 +123,11 @@ def savenpy_luna(id,luna_segment,luna_data,savepath):
 
 def preprocess_luna(path):
     t0 = int(round(time.time() * 1000))
-    luna_segment = "D:/PFE/GUI/dataset/seg-lungs-LUNA16"
-    savepath = "D:/PFE/GUI/dataset/output"
+    luna_segment = "dataset/seg-lungs-LUNA16"
+    savepath = "dataset/output"
     luna_data = path
     print('starting preprocessing luna')
-    id = path.split("/")[-1].split(".")[0]
+    id = path.split("/")[-1][0:-4]
     scan = savenpy_luna(id,luna_segment,luna_data,savepath)
     t1= int(round(time.time() * 1000))
     t2=t1-t0

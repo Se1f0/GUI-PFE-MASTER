@@ -8,6 +8,8 @@ from PyQt5 import uic
 from tools import *
 from prepare import preprocessScan
 from scan3dViewer import StlViewer
+from segmentation import getNodulesCoordinates3, get_unet,getWeightsPath,drawAllResults
+from classification import getClassification
 
 class WelcomeScreen(QDialog):
     def __init__(self):
@@ -328,6 +330,11 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.threadLoad.start()
         self.threadLoad.any_signal.connect(self.getThreadResults)
     
+    def goToDetection(self):
+        detectionView = DetectionScreen(self.im,self.path)
+        widget.addWidget(detectionView)
+        widget.setCurrentIndex(widget.currentIndex()+1)
+
     def loadLoadingScreen(self):
         self.toolBar.setVisible(False)
         self.frame.setVisible(False)
@@ -387,6 +394,7 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.actionZoom_In.triggered.connect(self.zoomIn)
         self.actionReset_Zoom.triggered.connect(self.zoomReset)
         self.actionView_3D_scan.triggered.connect(self.goTo3D)
+        self.detectionButton.clicked.connect(self.goToDetection)
         print("end")
 
     def goTo3D(self):
@@ -497,6 +505,322 @@ class ProcessedScanViwerScreen(QMainWindow):
     
     def goBack(self):
         widget.removeWidget(self)
+
+class DetectionScreen(QMainWindow):
+    def __init__(self,scan,path):
+        super(DetectionScreen,self).__init__()
+
+        uic.loadUi("UI files/detectionScreen.ui",self)
+
+        self.loadLoadingScreen()
+
+        self.innitIndex = 0
+        self.labelImageOriginal = None
+        self.zooming = False
+        self.w = None
+        self.scan = scan
+        self.path = path
+        self.coords = None
+        self.classifications = None
+        self.img3D = None
+        
+        self.threadDetect = DetectionThreadClass(self.scan,parent=None)
+        self.threadDetect.start()
+        self.threadDetect.any_signal.connect(self.getThreadResults)
+    
+    def loadLoadingScreen(self):
+        self.toolBar.setVisible(False)
+        self.metaTitle.setVisible(False)
+        self.nodulesList.setVisible(False)
+        self.metaDataIcon.setVisible(False)
+        self.frame.setVisible(False)
+        self.image.setVisible(False)
+        self.imageName.setVisible(False)
+        self.index.setVisible(False)
+        self.verticalSlider.setVisible(False)
+        self.informationsLabel.setVisible(False)
+        self.informationsIcon.setVisible(False)
+        self.infoTable.setVisible(False)
+        self.noduleImage.setVisible(False)
+
+
+
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
+        self.widget.setCursor(CURSOR_NEW)
+        self.loadingLabel.setText("Detection nodules\n     Please wait")
+        self.loadingLabel.adjustSize()
+        movie = QtGui.QMovie('assets\loading.gif')
+        self.loading.setMovie(movie)
+        movie.start()
+
+    def getThreadResults(self,data):
+        self.coords = data[0]
+        self.classifications = data[1]
+        print(len(self.coords),len(self.classifications))
+
+        self.loading.setVisible(False)
+        self.loadingLabel.setVisible(False)
+
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.widget.setCursor(CURSOR_NEW)
+
+        self.loadInfos()
+
+        self.toolBar.setVisible(True)
+        self.metaTitle.setVisible(True)
+        self.nodulesList.setVisible(True)
+        self.metaDataIcon.setVisible(True)
+        self.frame.setVisible(True)
+        self.image.setVisible(True)
+        self.imageName.setVisible(True)
+        self.index.setVisible(True)
+        self.verticalSlider.setVisible(True)
+        self.informationsLabel.setVisible(True)
+        self.informationsIcon.setVisible(True)
+        self.infoTable.setVisible(True)
+        self.noduleImage.setVisible(True)
+        self.actionReset_Zoom.setEnabled(False)
+
+        self.nodulesList.setStyleSheet('font: 75 12pt "Verdana"')
+
+        self.actionNext_Slice.triggered.connect(self.slideRight)
+        self.actionLeft_Slice.triggered.connect(self.slideLeft)
+        self.actionReset.triggered.connect(self.reset)
+        self.actionGoBack.triggered.connect(self.goBack)
+        self.verticalSlider.setMinimum(0)
+        self.verticalSlider.setMaximum(self.labelImage.shape[0]-1)
+        self.verticalSlider.valueChanged.connect(self.slide)
+        self.actionPlay.triggered.connect(self.play)
+        self.actionpause.triggered.connect(self.pause)
+        self.actionZoom_In.triggered.connect(self.zoomIn)
+        self.actionReset_Zoom.triggered.connect(self.zoomReset)
+        self.actionView_3D_scan.triggered.connect(self.goTo3D)
+
+    def loadInfos(self):
+        img3D = np.zeros((self.scan.shape[1],self.scan.shape[2],self.scan.shape[3],3),dtype=self.scan.dtype)
+        for z in range(self.scan.shape[1]):
+            img3D[z] = cv.cvtColor(self.scan[0][z],cv.COLOR_GRAY2RGB)
+        img3D = drawAllResults(img3D,self.coords,(255,0,0))
+        self.img3D = img3D
+        img3D2 = np.zeros((self.scan.shape[1],512,512,3),dtype=self.scan.dtype)
+        for z in range(img3D.shape[0]):
+            img3D2[z] = cv.resize(img3D[z],(512,512))
+        self.labelImage = img3D2
+        self.updateImage()
+        self.imageName.setText(self.path.split("/")[-1])
+        self.imageName.adjustSize()
+        self.imageName.setGeometry((self.frame.size().width()-self.imageName.size().width())//2,80,self.imageName.size().width(),self.imageName.size().height())
+        self.setNoduleList()
+
+    def updateImage(self):
+        pixmap = QImage(self.labelImage[self.innitIndex], self.labelImage.shape[2], self.labelImage.shape[1], self.labelImage.shape[2]*3, QImage.Format_RGB888)
+        self.image.setPixmap(QPixmap.fromImage(pixmap))
+        self.image.setScaledContents(True)
+        self.verticalSlider.setValue(self.innitIndex)
+        self.index.setText(f'{self.innitIndex:03}/{self.labelImage.shape[0]-1}')
+    
+    def slide(self,value):
+        self.innitIndex = value
+        self.updateImage()
+    
+    def slideRight(self):
+        self.innitIndex += 1
+        if(self.innitIndex >= self.labelImage.shape[0]):
+            self.innitIndex = 0
+        self.updateImage()
+    
+    def slideLeft(self):
+        self.innitIndex = max(0,self.innitIndex-1)
+        self.updateImage()
+    
+    def reset(self):
+        self.innitIndex = 0
+        self.updateImage()
+    
+    def goBack(self):
+        widget.removeWidget(self)
+    
+    def goTo3D(self):
+        if self.w is None:
+            self.w = StlViewer(self.scan[0])
+        self.w.show()
+    
+    def mouseReleaseEvent(self, event):
+        imageRectX,imageRectY = (self.image.x()+self.frame.x(),self.image.y()+self.frame.y()+34)
+        if  (event.pos().x() <= imageRectX+512 and event.pos().x() >= imageRectX) and (event.pos().y() <= imageRectY+512 and event.pos().y() >= imageRectY) and self.zooming:
+            self.labelImageOriginal = self.labelImage
+            print(event.pos().x()-imageRectX,event.pos().y()-imageRectY)
+            self.applyZoomIn((self.innitIndex,event.pos().y()-imageRectY,event.pos().x()-imageRectX),128)
+            self.zooming = False
+            self.actionZoom_In.setEnabled(False)
+            print(self.labelImage.shape)
+    
+    def zoomReset(self):
+        CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
+        self.image.setCursor(CURSOR_NEW)
+        self.labelImage = self.labelImageOriginal
+        self.actionZoom_In.setEnabled(True)
+        self.actionReset_Zoom.setEnabled(False)
+        self.updateImage()
+
+    def zoomIn(self):
+        CURSOR_NEW = QtGui.QCursor(QtGui.QPixmap('assets/Tool bar/zoom-in.png'))
+        self.image.setCursor(CURSOR_NEW)
+        self.zooming = True
+    
+    def applyZoomIn(self,cm,ratio):
+        rm=ratio//2
+        xm=cm[2]-rm
+        ym=cm[1]-rm
+        if(ym<0):
+            ym=0
+            ymp=ratio
+        else:
+            ymp=ym+ratio
+            if(ymp>self.labelImage.shape[1]):
+                ymp=self.labelImage.shape[1]
+                ym=ymp-ratio
+                
+        if(xm<0):
+            xm=0
+            xmp=ratio
+        else:
+            xmp=xm+ratio
+            if(xmp>self.labelImage.shape[2]):
+                xmp=self.labelImage.shape[2]
+                xm=xmp-ratio
+        self.labelImage = np.copy(self.labelImage[::,ym:ymp,xm:xmp])
+        self.actionReset_Zoom.setEnabled(True)
+        self.updateImage()
+    
+    def cropBloc(self,cm,ratio):
+        rm=ratio//2
+        xm=cm[2]-rm
+        ym=cm[1]-rm
+        if(ym<0):
+            ym=0
+            ymp=ratio
+        else:
+            ymp=ym+ratio
+            if(ymp>self.labelImage.shape[1]):
+                ymp=self.labelImage.shape[1]
+                ym=ymp-ratio
+                
+        if(xm<0):
+            xm=0
+            xmp=ratio
+        else:
+            xmp=xm+ratio
+            if(xmp>self.labelImage.shape[2]):
+                xmp=self.labelImage.shape[2]
+                xm=xmp-ratio
+        return [cm[0],ym,xm]
+
+    def play(self):
+        self.actionpause.setEnabled(True)
+        self.actionPlay.setEnabled(False)
+        self.actionNext_Slice.setEnabled(False)
+        self.actionLeft_Slice.setEnabled(False)
+        self.actionReset.setEnabled(False)
+        self.verticalSlider.setEnabled(False)
+        self.verticalSlider.setEnabled(False)
+        self.actionGoBack.setEnabled(False)
+        self.actionView_3D_scan.setEnabled(False)
+        self.threadPlay = PlayThread(parent=None)
+        self.threadPlay.start()
+        self.threadPlay.any_signal.connect(self.getPlayThreadResults)
+    
+    def getPlayThreadResults(self,isReady):
+        self.slideRight()
+
+    def pause(self):
+        self.threadPlay.stop()
+        self.actionpause.setEnabled(False)
+        self.actionPlay.setEnabled(True)
+        self.actionNext_Slice.setEnabled(True)
+        self.actionLeft_Slice.setEnabled(True)
+        self.actionReset.setEnabled(True)
+        self.verticalSlider.setEnabled(True)
+        self.actionGoBack.setEnabled(True)
+        self.actionView_3D_scan.setEnabled(True)
+
+    def setNoduleList(self):
+        nodulesList = ["Nodule "+str(i+1) for i in range(len(self.coords))]
+        self.nodulesList.addItems(nodulesList)
+        for index in range(self.nodulesList.count()):
+            self.nodulesList.item(index).setIcon(QtGui.QIcon("assets\cancer.png"))
+        self.nodulesList.itemClicked.connect(self.setInfoTable)
+    
+    def setInfoTable(self,item):
+        self.infoTable.clear()
+        self.infoTable.setRowCount(0)
+        self.infoTable.setColumnCount(0)
+
+        index = int(item.text().split(" ")[-1])-1
+        ind = len(self.coords[index])//2
+        data = dict()
+        keys = ["Name","Slice","(x,y)","Diametre","Classification"]
+        data[keys[0]] = item.text()
+        data[keys[1]] = self.coords[index][ind][0]
+        data[keys[2]] = (self.coords[index][ind][2],self.coords[index][ind][1])
+        data[keys[3]] = self.coords[index][ind][3]*2
+        if self.classifications[index]["FinalPrediction"][0] == 1:
+            data[keys[4]] =  str(round(self.classifications[index]["FinalPrediction"][1] * 100,2)) + "% Malignant"
+        else:
+            data[keys[4]] =  str(round(self.classifications[index]["FinalPrediction"][1] * 100,2)) + "% Benign"
+
+        colPosition = self.infoTable.columnCount()
+        self.infoTable.insertColumn(colPosition)
+        self.infoTable.setHorizontalHeaderLabels(["Values"])
+
+        header = self.infoTable.horizontalHeader()       
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+        for i in range(len(list(data.keys()))):
+            rowPosition = self.infoTable.rowCount()
+            self.infoTable.insertRow(rowPosition)
+        self.infoTable.setVerticalHeaderLabels(list(data.keys()))
+
+        for i in range(len(list(data.keys()))):
+            self.infoTable.setItem(i , 0, QTableWidgetItem(str(data[list(data.keys())[i]])))
+
+        self.infoTable.setFont(QtGui.QFont('Verdana',12))
+        self.infoTable.setEditTriggers(QTableWidget.NoEditTriggers)
+        self.infoTable.resizeColumnsToContents()
+
+        self.innitIndex = int(data["Slice"])
+        self.updateImage()
+
+        coords = self.cropBloc(self.coords[index][ind],128)
+        noduleBloc = np.copy(self.img3D[coords[0]][coords[1]:coords[1]+128,coords[2]:coords[2]+128])
+        pixmap = QImage(noduleBloc, noduleBloc.shape[1], noduleBloc.shape[0], noduleBloc.shape[1]*3, QImage.Format_RGB888)
+        self.noduleImage.setPixmap(QPixmap.fromImage(pixmap))
+        self.noduleImage.setScaledContents(True)
+
+class DetectionThreadClass(QtCore.QThread):
+    any_signal = QtCore.pyqtSignal(object)
+    def __init__(self, scan,parent=None):
+        super(DetectionThreadClass,self).__init__(parent)
+        self.scan = scan
+    
+    def run(self):
+        print("Starting detection")
+        choix_lr='0.001'
+        choix1='20'
+        choix2='20_1'
+        dirpath='Segmentation/segmentation weights 1'
+        weights_segmentation_best,weights_segmentation_after = getWeightsPath(dirpath,choix_lr,choix1,choix2)
+        model=get_unet()
+        model.load_weights(weights_segmentation_after) 
+        print("Loaded model from disk")
+        list_coords = getNodulesCoordinates3(model,self.scan)
+        print("End detection")
+        
+        print("Start Classification")
+        all_models_results = getClassification(list_coords,self.scan)
+        print("End Classification")
+        self.any_signal.emit((list_coords,all_models_results))
+
 
 
 # main
