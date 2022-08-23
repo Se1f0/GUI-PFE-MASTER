@@ -7,7 +7,6 @@ from keras.models import Model
 from keras.layers import Input,BatchNormalization,Lambda
 from keras.layers import  Dropout, BatchNormalization
 from keras.layers.core import Dropout, Lambda
-from keras.layers.merge import concatenate
 from keras.layers import Input, Conv3D, MaxPooling3D, Dropout, BatchNormalization
 import tensorflow as tf
 from volumentations import *
