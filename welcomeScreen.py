@@ -823,8 +823,6 @@ class DetectionThreadClass(QtCore.QThread):
         print("End Classification")
         self.any_signal.emit((list_coords,all_models_results))
 
-
-
 # main
 app = QApplication(sys.argv)
 welcome = WelcomeScreen()
