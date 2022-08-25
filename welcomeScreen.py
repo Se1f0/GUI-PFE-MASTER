@@ -600,7 +600,7 @@ class DetectionScreen(QMainWindow):
         img3D = np.zeros((self.scan.shape[1],self.scan.shape[2],self.scan.shape[3],3),dtype=self.scan.dtype)
         for z in range(self.scan.shape[1]):
             img3D[z] = cv.cvtColor(self.scan[0][z],cv.COLOR_GRAY2RGB)
-        img3D = drawAllResults(img3D,self.coords,(255,0,0))
+        img3D = drawAllResults(img3D,self.coords)
         self.img3D = img3D
         img3D2 = np.zeros((self.scan.shape[1],512,512,3),dtype=self.scan.dtype)
         for z in range(img3D.shape[0]):
@@ -808,12 +808,14 @@ class DetectionThreadClass(QtCore.QThread):
         choix_lr='0.001'
         choix1='20'
         choix2='20_1'
-        dirpath='Segmentation/segmentation weights 1'
-        weights_segmentation_best,weights_segmentation_after = getWeightsPath(dirpath,choix_lr,choix1,choix2)
+        dirpath='Segmentation/segmentation weights 1/3d_segmentation_false_all_16_0.0003_after_t3.h5'
+        # weights_segmentation_best,weights_segmentation_after = getWeightsPath(dirpath,choix_lr,choix1,choix2)
+        weights_segmentation_after = dirpath
         model=get_unet()
         model.load_weights(weights_segmentation_after) 
         print("Loaded model from disk")
         list_coords = getNodulesCoordinates3(model,self.scan)
+        print(list_coords)
         print("End detection")
         
         print("Start Classification")

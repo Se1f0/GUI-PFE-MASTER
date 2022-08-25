@@ -1,4 +1,6 @@
 import os
+from pickletools import uint8
+from turtle import color
 import numpy as np
 from tqdm import tqdm
 import keras.backend as K
@@ -121,7 +123,7 @@ def create3dBlock(img,coords,size_3d=64):
     
     return cimg,start_coords 
 
-def getAll3dBlocks(img,sp=[32,64,64]):
+def getAll3dBlocks(img,sp=[64,64,64]):
     list_coords=[]
     for z in range(0,img.shape[1],sp[0]):
         zf=z+64
@@ -155,11 +157,17 @@ def Load3dBlock(rimg):
        
     return rgbimg
 
-def drawAllResults(img,list_coords,color):
+def drawAllResults(img,list_coords):
+    colorRange = np.arange(150,255,20,dtype=np.uint8)
     img2=np.copy(img)
     for i in tqdm(range(len(list_coords))):
+        color1 = random.randint(0,len(colorRange)-1)
+        color2 = random.randint(0,len(colorRange)-1)
+        color3 = random.randint(0,len(colorRange)-1)
+        colorRGB = (int(colorRange[color1]),int(colorRange[color2]),int(colorRange[color3]))
+        print(colorRGB)
         for c1 in list_coords[i]:
-            img2[c1[0]] = cv2.circle(img2[c1[0]], (c1[2],c1[1]), c1[3], color, 1)
+            img2[c1[0]] = cv2.circle(img2[c1[0]], (c1[2],c1[1]), c1[3], colorRGB, 1)
     return img2                                         
 
 def show_predictions2(model,sample_image,coords,show=True):
@@ -178,42 +186,28 @@ def show_predictions2(model,sample_image,coords,show=True):
     return  np.max(np.unique(pred_mask.astype(dtype=np.uint8))),l1,l2
 
 def getNodulesCoordinates3(model,img):
-    
-
     img2=np.copy(img)
-
     list_coords=getAll3dBlocks(img)
-
-
     results_list_coords=[]
 
     print(len(list_coords))
     for id,c in tqdm(enumerate(list_coords)):
-        
         coords=list_coords[id]
         sample_image=img[0][coords[0]:coords[0]+64,coords[1]:coords[1]+64,coords[2]:coords[2]+64]
-
-
         predval,l1,l2=show_predictions2(model,sample_image,coords,show=False)
-
-   
         if(predval>0):
-                            
             #create nodule centered block
             ind=len(l2)//2
             coo=(l2[ind][0],l2[ind][1],l2[ind][2])
             block2,st=create3dBlock(img,coo) 
-            
             predval2,l3,l4=show_predictions2(model,block2,st,show=False)
             if(predval2>0):
-
                 #get block
                 block3=img[0][st[0]:st[0]+64,st[1]:st[1]+64,st[2]:st[2]+64]
                 final_block=Load3dBlock(block3)
-
-                
                 results_list_coords.append(l4)
-    return results_list_coords
+    list_coords2 = removeduplicates(results_list_coords)          
+    return list_coords2
 
 
 def dice_coef(y_true, y_pred):
@@ -303,3 +297,132 @@ def get_unet():
 
     return model
 
+def findSplitsInListCoords(list_coords):
+    list_coords2=[]
+    for i, coords in enumerate(list_coords):
+        valp=coords[0][0]
+        split=(-10,-10)
+        for j in range(1,len(coords)):
+            valc=coords[j][0]
+            diff=valc-valp
+            valp=valc
+            if(diff>1):
+                split=(i,j)
+        if(split[0]!=-10 and split[1]!=-10):
+            arr1=list_coords[split[0]][:split[1]]
+            arr2=list_coords[split[0]][split[1]:]
+            list_coords2.append(arr1)
+            list_coords2.append(arr2)
+        else:
+            list_coords2.append(coords)
+    return list_coords2                
+
+def searchCoordsinListCoords(c,coords,mindist):
+    pos=-1
+    for i,c1 in enumerate(coords):
+        if(c1[0]==c[0]):
+            a=np.array((c[1],c[2]))
+            b=np.array((c1[1],c1[2]))
+            dist = np.round(np.linalg.norm(a - b),2)
+            if(dist<=mindist):
+                pos=i
+                return pos
+    
+    return pos
+
+def getMinMaxListCoords(coords,coords2):
+    minx=1000
+    maxx=0
+    for c in coords:
+        if(c[0]>maxx):
+            maxx=c[0]
+        if(c[0]<minx):
+            minx=c[0]
+    for c in coords2:
+        if(c[0]>maxx):
+            maxx=c[0]
+        if(c[0]<minx):
+            minx=c[0]
+    print(minx,maxx)        
+    return minx,maxx        
+
+def createNewCoords(coords,coords2,minx,maxx):
+    coords3=[]
+    for z in range(minx,maxx+1):
+        c1=None
+        for c in coords:
+            if(c[0]==z):
+                c1=c
+                break
+        c2=None
+        for c in coords2:
+            if(c[0]==z):
+                c2=c
+                break
+        if(c1!=None and c2!=None):
+            if(c1[3]>c2[3]):
+                coords3.append(c1)
+            else:
+                coords3.append(c2)
+        else:
+            if(c1!=None and c2==None):
+                coords3.append(c1)
+            if(c2!=None and c1==None):
+                coords3.append(c2)
+    return coords3            
+
+def removeIndicesFromListInter(l3):
+    l3_2=[]
+    new_l=[]
+    for i,val in enumerate(l3):
+        if(i not in l3_2):
+            for j,val2 in enumerate(l3):
+                if(i!=j and j not in l3_2):
+                    if(val[0]==val2[0] or val[0]==val2[1] or val[1]==val2[0] or val[1]==val2[1]):
+                         if(len(val[2]) >= len(val2[2])):
+                                l3_2.append(j)
+                         else:
+                                l3_2.append(i)
+                                break
+    for i,val in enumerate(l3):
+        if(i not in l3_2):
+            new_l.append(val) 
+    return new_l      
+
+def removeduplicates(list_coords,mindist=3):
+    list_coords2=[]
+    list_remove_ind=[]
+    list_remove_ind_tuple=[]
+    list_remove_ind_tuple2=[]
+    for i,coords in enumerate(list_coords):
+        if(i not in list_remove_ind):
+            vf=0
+            for j,coords2 in enumerate(list_coords):
+                if(i!=j and j not in list_remove_ind):
+                    if(len(coords) >= len(coords2)):
+                            cpt=0
+                            for c in coords2:
+                                pos=searchCoordsinListCoords(c,coords,mindist)
+                                if(pos!=-1):
+                                    cpt+=1
+                            if(cpt>0):
+                                if(cpt==len(coords2)):
+                                    list_remove_ind.append(j)
+                                    list_remove_ind_tuple.append((i,j))
+                                else:
+                                    minx,maxx=getMinMaxListCoords(coords,coords2)
+                                    list_remove_ind_tuple2.append((i,j,createNewCoords(coords,coords2,minx,maxx)))
+    
+    
+    for val in list_remove_ind_tuple2:
+        i=val[0]
+        j=val[1]
+        list_remove_ind.append(i)
+        list_remove_ind.append(j)
+    for k,coords in enumerate(list_coords):
+        if(k not in list_remove_ind):
+            list_coords2.append(coords)
+    list_remove_ind_tuple2=removeIndicesFromListInter(list_remove_ind_tuple2)        
+    for val in list_remove_ind_tuple2:
+        list_coords2.append(val[2])              
+    return list_coords2

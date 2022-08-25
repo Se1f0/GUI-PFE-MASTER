@@ -27,7 +27,7 @@ def getClassification(list_coords,img):
     print(weights_classification2)
     model_resnet50,_=get_resnet50_model()
     model_resnet50.load_weights(weights_classification2) 
-    print("Loaded model from disk") 
+    print("Loaded model from disk")
 
     weights_classification3=getWeightsPath(md='InceptionV3',nb='1',after_best='after',dirpath2=dirpath2)
     print(weights_classification3)

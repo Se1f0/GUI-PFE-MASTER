@@ -345,3 +345,24 @@ def dataToMesh(scan):
         for j in range(3):
             mm.vectors[i][j] = vertices[f[j],:]
     return mm
+
+def sortListCoords(listCoords):
+    temp = listCoords.copy()
+    listCoords2 = []
+    listIndex = []
+    for j in range(len(temp)):
+        min = 1000
+        pos = -1
+        for i,coords in enumerate(temp):
+            ind = len(coords)//2
+            value = coords[ind]
+            if value[0] < min:
+                min = value[0]
+                pos = i
+        listIndex.append(pos)
+        temp.pop(pos)
+
+    for index in listIndex:
+        listCoords2.append(listCoords[index])
+    
+    return listCoords2
