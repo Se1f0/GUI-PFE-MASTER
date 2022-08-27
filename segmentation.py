@@ -123,7 +123,7 @@ def create3dBlock(img,coords,size_3d=64):
     
     return cimg,start_coords 
 
-def getAll3dBlocks(img,sp=[64,64,64]):
+def getAll3dBlocks(img,sp=[32,32,32]):
     list_coords=[]
     for z in range(0,img.shape[1],sp[0]):
         zf=z+64
@@ -206,9 +206,11 @@ def getNodulesCoordinates3(model,img):
                 block3=img[0][st[0]:st[0]+64,st[1]:st[1]+64,st[2]:st[2]+64]
                 final_block=Load3dBlock(block3)
                 results_list_coords.append(l4)
+    # list_coords2 = findSplitsInListCoords(results_list_coords)
+    # list_coords2 = findSplitsInListCoords(list_coords2)
+    # list_coords2 = findSplitsInListCoords(list_coords2)
     list_coords2 = removeduplicates(results_list_coords)          
     return list_coords2
-
 
 def dice_coef(y_true, y_pred):
     y_true_f = K.flatten(y_true)

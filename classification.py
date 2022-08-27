@@ -196,8 +196,7 @@ def printGame(A,B,rownames,colnames):
 
 def GetFinalResultsWithThj(elm,thresh=0.5):
     ApplyThj=True
-    results_list=set()
-    cpto=0
+    game_values=set()
     #case:malignant
     cpt=0
     for c in elm:
@@ -218,50 +217,85 @@ def GetFinalResultsWithThj(elm,thresh=0.5):
 
     # appliying Thj To Get Final Result if there was at least 2 stratigies for each player
     if(ApplyThj):  
-        Malignant_stratigies=[]
-        Benign_stratigies=[]
+        elm_m=[]
+        elm_b=[]
+        
+        ms=[]
+        bs=[]
         rn=[]
-        cn=[]      
-        lb=[]
+        cn=[]
+        avg_b=0
+        avg_m=0
         for c in elm:
-            lm=[]
             if(c[1]==1):
-                gain_malignant=np.round(c[3]-c[2],3)
-                lm.append(gain_malignant)
-                lm.append(gain_malignant)
-                rn.append(c[0])
-            else:    
-                gain_benign=np.round(c[3]-c[2],3)
-                lb.append(gain_benign)
-                cn.append(c[0])
-            if(len(lm)>0):        
-                Malignant_stratigies.append(lm)
-        if(len(lb)>0):    
-            Benign_stratigies.append(lb)
-            Benign_stratigies.append(lb)
- 
-        #start setting up the Game  
-        Malignant_stratigies = np.array(Malignant_stratigies) # A is the row player
-        Benign_stratigies = np.array(Benign_stratigies) # B is the column player
-        if(len(Malignant_stratigies)==len(Benign_stratigies)):
-            cpto+=1
-#             print("elm  :   ")
-#             for c in elm:
-#                 print("   ",c[1],'..',c)
-#             print()
-#             printGame(Malignant_stratigies,Benign_stratigies,rn,cn) 
-            game1 = nash.Game(Malignant_stratigies,Benign_stratigies)
-            equilibria = game1.support_enumeration()
-            
+                avg_m+=0.5*c[3]
+                elm_m.append(c)
+            else:
+                avg_b+=0.5*c[2]
+                elm_b.append(c)
+                
+        if(len(elm_m)==len(elm_b)):
+            for m in elm_m:
+                rn.append(m[0])
+                bs2=[]
+                ms2=[]
+                for b in elm_b:
+                    gain_mal=m[3]
+                    gain_be=b[2]
+                    gain=gain_mal-gain_be
+                    gain=np.round(gain,2)
+                    #sts names
+                    if(b[0] not in cn):
+                        cn.append(b[0])
+                    #add sts
+                    ms2.append(gain)
+                    bs2.append(-1*gain)
+                bs.append(bs2)
+                ms.append(ms2)
 
-            for eq in equilibria:
-                i,j=(np.argmax(eq[0]),np.argmax(eq[1]))
-                result_labels=(rn[i],cn[j])
-                results=(Malignant_stratigies[i][j],Benign_stratigies[i][j])
-                results_list.add(results)
-                            
-    return cpto,results_list    
-    
+
+            Malignant_stratigies = np.array(ms) # A is the row player
+            Benign_stratigies = np.array(bs) # B is the column player
+
+            game1 = nash.Game(Malignant_stratigies,Benign_stratigies)
+            final_values=getGameValueFromNashEquilibrium(game1,rn,cn)
+
+            for j,val in enumerate(final_values):
+                if(val[0]>0):
+                    vf=1
+                    avge=avg_m
+                elif(val[0]<0):
+                    vf=0
+                    avge=avg_b
+                else:
+                    if(avg_m>=avg_b):
+                        vf=2
+                        avge=avg_m
+                    else:
+                        vf=-2
+                        avge=avg_b
+                        
+
+                game_values.add((val[0],avge))
+    return game_values    
+
+def getGameValueFromNashEquilibrium(game,rn,cn):
+    equilibria = game.support_enumeration()
+    list_final_values=[]
+    for i,eq in enumerate(equilibria):
+        ind=(np.argmax(eq[0]),np.argmax(eq[1]))
+        result=(rn[ind[0]],cn[ind[1]])
+        A=[]
+        B=[]
+        for j in range(len(eq[0])):
+             A.append(eq[0][j])
+             B.append(eq[1][j])
+        sigma_r = np.array(A)
+        sigma_c = np.array(B)
+        value=game[sigma_r, sigma_c]
+        list_final_values.append(value)
+    return list_final_values
+
 def getAllClassifications(list_coords,img,model_densenet121,model_resnet50,model_inceptionv3,model_inceptionresnetv2):
     list_preds_per_coords=[]
     for c in list_coords:
@@ -299,7 +333,7 @@ def getAllClassifications(list_coords,img,model_densenet121,model_resnet50,model
         else: 
             nbm+=1
         pred["InceptionResNetV2"]=(y2,y)
-        _,res=GetFinalResultsWithThj(elm)
+        res=GetFinalResultsWithThj(elm)
         pred["THJ"]=res
         #print(nbm,nbb)
         
@@ -312,14 +346,8 @@ def getAllClassifications(list_coords,img,model_densenet121,model_resnet50,model
                 final_prediction=(1.0 ,v)
         else:
             lres=list(res)
-            vf=lres[0][0]+lres[0][1]
-            if(vf > 0):
-                m=1
-                v=lres[0][0]
-            else:
-                m=0
-                v=-1*lres[0][1]
-            final_prediction=(m, v )     
+            final_prediction=lres[0]
+            print(lres[0])            
         pred["FinalPrediction"]=final_prediction
         list_preds_per_coords.append(pred)
     return list_preds_per_coords

@@ -764,7 +764,7 @@ class DetectionScreen(QMainWindow):
         data[keys[1]] = self.coords[index][ind][0]
         data[keys[2]] = (self.coords[index][ind][2],self.coords[index][ind][1])
         data[keys[3]] = self.coords[index][ind][3]*2
-        if self.classifications[index]["FinalPrediction"][0] == 1:
+        if self.classifications[index]["FinalPrediction"][0] == 1 or self.classifications[index]["FinalPrediction"][0] == 2:
             data[keys[4]] =  str(round(self.classifications[index]["FinalPrediction"][1] * 100,2)) + "% Malignant"
         else:
             data[keys[4]] =  str(round(self.classifications[index]["FinalPrediction"][1] * 100,2)) + "% Benign"
