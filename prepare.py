@@ -24,7 +24,10 @@ def step1_python(case_path):
 def savenpy(data_path,prep_folder):        
     resolution = np.array([1,1,1])
     name = data_path.split("/")[-1]
-    
+    outputFolder = prep_folder+"/"+name
+    isExist=os.path.exists(outputFolder)
+    if not isExist:
+        os.makedirs(outputFolder)
     im, m1, m2, spacing = step1_python(data_path)
     Mask = m1+m2
     
@@ -57,27 +60,30 @@ def savenpy(data_path,prep_folder):
                 extendbox[1,0]:extendbox[1,1],
                 extendbox[2,0]:extendbox[2,1]]
     sliceim = sliceim2[np.newaxis,...]
-    # np.save(os.path.join(prep_folder,name+'_clean.npy'),sliceim)
+    np.save(os.path.join(outputFolder,name+'_clean.npy'),sliceim)
     print(name)
     return(sliceim)
 
 def full_prep(path):
     warnings.filterwarnings("ignore")
     t0 = int(round(time.time() * 1000))
-    prep_folder = "D:/PFE/GUI/dataset/output"
+    prep_folder = "Saved"
     data_path = path
     print('starting preprocessing')
     scan = savenpy(data_path,prep_folder)
     t1= int(round(time.time() * 1000))
     t2=t1-t0
-    print('end preprocessing luna in S : ' + str(t2/1000) + ' M : ' + str(t2/1000/60))
+    print('end preprocessing dicom in S : ' + str(t2/1000) + ' M : ' + str(t2/1000/60))
     return scan
 
 def savenpy_luna(id,luna_segment,luna_data,savepath):
     isClean = True
     resolution = np.array([1,1,1])
     name = id
-    
+    outputFolder = savepath+"/"+name
+    isExist=os.path.exists(outputFolder)
+    if not isExist:
+        os.makedirs(outputFolder)
     Mask,origin,spacing,isflip = load_itk_image(os.path.join(luna_segment,name+'.mhd'))
     if isflip:
         Mask = Mask[:,::-1,::-1]
@@ -117,14 +123,14 @@ def savenpy_luna(id,luna_segment,luna_data,savepath):
                     extendbox[1,0]:extendbox[1,1],
                     extendbox[2,0]:extendbox[2,1]]
         sliceim = sliceim2[np.newaxis,...]
-        # np.save(os.path.join(savepath,name+'_clean.npy'),sliceim)
+        np.save(os.path.join(outputFolder,name+'_clean.npy'),sliceim)
         print(name)
         return(sliceim)
 
 def preprocess_luna(path):
     t0 = int(round(time.time() * 1000))
     luna_segment = "dataset/seg-lungs-LUNA16"
-    savepath = "dataset/output"
+    savepath = "Saved"
     luna_data = path
     print('starting preprocessing luna')
     id = path.split("/")[-1][0:-4]

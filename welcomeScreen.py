@@ -31,6 +31,7 @@ class UploadScreen(QDialog):
 
         self.mhdUploadButton.clicked.connect(self.openMhd)
         self.dicomUploadButton.clicked.connect(self.openDcm)
+        self.homeButton.mousePressEvent = self.goHomeScreen
     
     def openMhd(self):
         fname = QFileDialog.getOpenFileName(self, "Open CT scan", "E:/PFE/LUNA/allset", "Mhd files (*.mhd)")
@@ -46,6 +47,9 @@ class UploadScreen(QDialog):
             widget.addWidget(scanView)
             widget.setCurrentIndex(widget.currentIndex()+1)
 
+    def goHomeScreen(self,eve):
+        widget.removeWidget(self)
+    
 class ScanViwerScreen(QMainWindow):
     def __init__(self,path):
         super(ScanViwerScreen,self).__init__()
@@ -282,7 +286,13 @@ class ThreadClass(QtCore.QThread):
             scan,index,scanOriginal = loadImage(self.path)
             self.any_signal.emit((scan,index,scanOriginal))
         else:
-            scan = preprocessScan(self.path)
+            name = self.path.split("/")[-1] if ".mhd" not in self.path else self.path.split("/")[-1].split(".")[0]
+            outputFolder = "Saved/"+name+"/"+name+"_clean.npy"
+            isExist=os.path.exists(outputFolder)
+            if isExist:
+                scan = np.load(outputFolder)
+            else:
+                scan = preprocessScan(self.path)
             self.any_signal.emit(scan)
 
 class PlayThread(QtCore.QThread):
@@ -294,7 +304,7 @@ class PlayThread(QtCore.QThread):
     def run(self):
         print("starting")
         t0 = int(round(time.time() * 1000))
-        fps = 60
+        fps = 30
         updateFrame = 1000//fps
         isReady = False
         while True:
@@ -524,7 +534,7 @@ class DetectionScreen(QMainWindow):
         self.classifications = None
         self.img3D = None
         
-        self.threadDetect = DetectionThreadClass(self.scan,parent=None)
+        self.threadDetect = DetectionThreadClass(self.scan,self.path,parent=None)
         self.threadDetect.start()
         self.threadDetect.any_signal.connect(self.getThreadResults)
     
@@ -799,27 +809,38 @@ class DetectionScreen(QMainWindow):
 
 class DetectionThreadClass(QtCore.QThread):
     any_signal = QtCore.pyqtSignal(object)
-    def __init__(self, scan,parent=None):
+    def __init__(self, scan,path,parent=None):
         super(DetectionThreadClass,self).__init__(parent)
         self.scan = scan
-    
+        self.name = path.split("/")[-1] if ".mhd" not in path else path.split("/")[-1].split(".")[0]
+
     def run(self):
+        outputFolder = "Saved/"+self.name
         print("Starting detection")
-        choix_lr='0.001'
-        choix1='20'
-        choix2='20_1'
-        dirpath='Segmentation/segmentation weights 1/3d_segmentation_false_all_16_0.0003_after_t3.h5'
-        # weights_segmentation_best,weights_segmentation_after = getWeightsPath(dirpath,choix_lr,choix1,choix2)
-        weights_segmentation_after = dirpath
-        model=get_unet()
-        model.load_weights(weights_segmentation_after) 
-        print("Loaded model from disk")
-        list_coords = getNodulesCoordinates3(model,self.scan)
-        print(list_coords)
+        isExistSeg=os.path.exists(outputFolder+"/"+self.name+"_coords.npy")
+        isExistClass=os.path.exists(outputFolder+"/"+self.name+"_class.npy")
+        if isExistSeg :
+            list_coords = np.load(outputFolder+"/"+self.name+"_coords.npy",allow_pickle=True)
+        else :
+            choix_lr='0.001'
+            choix1='20'
+            choix2='20_1'
+            dirpath='Segmentation/segmentation weights 1/3d_segmentation_false_all_16_0.0003_after_t3.h5'
+            # weights_segmentation_best,weights_segmentation_after = getWeightsPath(dirpath,choix_lr,choix1,choix2)
+            weights_segmentation_after = dirpath
+            model=get_unet()
+            model.load_weights(weights_segmentation_after) 
+            print("Loaded model from disk")
+            list_coords = getNodulesCoordinates3(model,self.scan)
+            np.save(os.path.join(outputFolder,self.name+"_coords.npy"),list_coords)
+            print(list_coords)
         print("End detection")
-        
         print("Start Classification")
-        all_models_results = getClassification(list_coords,self.scan)
+        if isExistClass:
+            all_models_results = np.load(outputFolder+"/"+self.name+"_class.npy",allow_pickle=True)
+        else:
+            all_models_results = getClassification(list_coords,self.scan)
+            np.save(os.path.join(outputFolder,self.name+"_class.npy"),all_models_results)
         print("End Classification")
         self.any_signal.emit((list_coords,all_models_results))
 
