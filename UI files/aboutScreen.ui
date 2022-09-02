@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1200</width>
+    <height>801</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QWidget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1200</width>
+     <height>800</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QWidget#widget{
+background-color: qlineargradient(spread:pad, x1:0.064, y1:0.107727, x2:0.869, y2:0.79, stop:0 rgba(23, 26, 33, 255), stop:0.806147 rgba(42, 71, 94, 255));}</string>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>100</y>
+      <width>991</width>
+      <height>670</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Verdana</family>
+      <pointsize>18</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(199, 213, 224);</string>
+    </property>
+    <property name="text">
+     <string>This application is created by Segueni Seif Eddine &amp; Touabti Mohamed in the context of a graduation project master's degree.
+
+The main goal of this project is to assist radiologists and doctors in viewing lung ct scans in both 2D and 3D mode, preprocessing the scans to make them more visible and easier for the model to detect, and finally Detecting nodules and classifying them as malignant or benign, and save the results in folders by their ID so that when it is launched again it will load directly the result instead of re-doing the whole process.
+
+Note that, Not all results are accurate due to hardware and data limitations while implementing the automatic detector and classifier. It can be considered a good assistant.
+
+In order to use the application, u must have a :
+- Lung CT scan in the format &quot;.mhd&quot; or &quot;.dcm&quot; (Which is more common)
+- Internet connection (This is just for the first time in order to download some files related to the classifier).
+- GPU is optional but it can accelerate the detection process.
+
+If you have any suggestions or feedback please let us know by contacting us :
+sesegueni@gmail.com
+mohreal943@gmail.com</string>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>568</x>
+      <y>20</y>
+      <width>64</width>
+      <height>64</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../assets/info.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="homeButton">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>20</y>
+      <width>64</width>
+      <height>64</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>../assets/home.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

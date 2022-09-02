@@ -19,11 +19,28 @@ class WelcomeScreen(QDialog):
         uic.loadUi("UI files/welcomeScreen.ui",self)
         
         self.getStartedButton.clicked.connect(self.goToNextScreen)
+        self.aboutButton.clicked.connect(self.goToAboutScreen)
     
     def goToNextScreen(self):
         upload = UploadScreen()
         widget.addWidget(upload)
         widget.setCurrentIndex(widget.currentIndex()+1)
+
+    def goToAboutScreen(self):
+        about = AboutScreen()
+        widget.addWidget(about)
+        widget.setCurrentIndex(widget.currentIndex()+1)
+
+class AboutScreen(QDialog):
+    def __init__(self):
+        super(AboutScreen,self).__init__()
+
+        uic.loadUi("UI files/aboutScreen.ui",self)
+    
+        self.homeButton.mousePressEvent = self.goHomeScreen
+    
+    def goHomeScreen(self,eve):
+        widget.removeWidget(self)
 
 class UploadScreen(QDialog):
     def __init__(self):
@@ -72,6 +89,11 @@ class ScanViwerScreen(QMainWindow):
         self.threadLoad.any_signal.connect(self.getThreadResults)
         self.threadPlay = None
 
+    def cancel(self):
+        self.threadLoad.stop()
+        self.goBack()
+
+
     def goTo3D(self):
         if self.w is None:
             self.w = StlViewer(self.scanOriginal)
@@ -82,6 +104,7 @@ class ScanViwerScreen(QMainWindow):
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
+        self.cancelButtton.setVisible(False)
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.widget.setCursor(CURSOR_NEW)
 
@@ -202,6 +225,8 @@ class ScanViwerScreen(QMainWindow):
         self.index.setVisible(False)
         self.verticalSlider.setVisible(False)
 
+        self.cancelButtton.clicked.connect(self.cancel)
+
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
         self.widget.setCursor(CURSOR_NEW)
         self.loadingLabel.setText("Loading")
@@ -278,11 +303,13 @@ class ThreadClass(QtCore.QThread):
     any_signal = QtCore.pyqtSignal(object)
     def __init__(self, path,screen,parent=None):
         super(ThreadClass,self).__init__(parent)
+        self.is_running = True
         self.path = path
         self.screen = screen
     
     def run(self):
         print("starting")
+        self.is_running = True
         if self.screen == 1:
             scan,index,scanOriginal = loadImage(self.path)
             self.any_signal.emit((scan,index,scanOriginal))
@@ -295,6 +322,11 @@ class ThreadClass(QtCore.QThread):
             else:
                 scan = preprocessScan(self.path)
             self.any_signal.emit(scan)
+    
+    def stop(self):
+        self.is_running = False
+        self.terminate()
+        print("stop")
 
 class PlayThread(QtCore.QThread):
     any_signal = QtCore.pyqtSignal(object)
@@ -346,6 +378,10 @@ class ProcessedScanViwerScreen(QMainWindow):
         widget.addWidget(detectionView)
         widget.setCurrentIndex(widget.currentIndex()+1)
 
+    def cancel(self):
+        self.threadLoad.stop()
+        self.goBack()
+
     def loadLoadingScreen(self):
         self.toolBar.setVisible(False)
         self.frame.setVisible(False)
@@ -354,9 +390,10 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.index.setVisible(False)
         self.verticalSlider.setVisible(False)
 
+        self.cancelButton.clicked.connect(self.cancel)
+        print(self.cancelButton.x())
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
         self.widget.setCursor(CURSOR_NEW)
-
         self.loadingLabel.setText("Preprocessing scan")
         self.loadingLabel.adjustSize()
         movie = QtGui.QMovie('assets\loading.gif')
@@ -379,7 +416,7 @@ class ProcessedScanViwerScreen(QMainWindow):
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
-
+        self.cancelButton.setVisible(False)
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.widget.setCursor(CURSOR_NEW)
 
@@ -541,6 +578,10 @@ class DetectionScreen(QMainWindow):
         self.threadDetect.start()
         self.threadDetect.any_signal.connect(self.getThreadResults)
     
+    def cancel(self):
+        self.threadDetect.stop()
+        self.goBack()
+
     def loadLoadingScreen(self):
         self.toolBar.setVisible(False)
         self.metaTitle.setVisible(False)
@@ -557,8 +598,10 @@ class DetectionScreen(QMainWindow):
         self.noduleImage.setVisible(False)
         self.goBlocLeftButton.setVisible(False)
         self.goBlocRightButton.setVisible(False)
+        self.emptydata.setVisible(False)
+        self.notFound.setVisible(False)
 
-
+        self.cancelButtton.clicked.connect(self.cancel)
 
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
         self.widget.setCursor(CURSOR_NEW)
@@ -575,30 +618,36 @@ class DetectionScreen(QMainWindow):
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
-
+        self.cancelButtton.setVisible(False)
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
         self.widget.setCursor(CURSOR_NEW)
 
         self.loadInfos()
 
         self.toolBar.setVisible(True)
-        self.metaTitle.setVisible(True)
-        self.nodulesList.setVisible(True)
-        self.metaDataIcon.setVisible(True)
         self.frame.setVisible(True)
         self.image.setVisible(True)
         self.imageName.setVisible(True)
         self.index.setVisible(True)
         self.verticalSlider.setVisible(True)
-        self.informationsLabel.setVisible(True)
-        self.informationsIcon.setVisible(True)
-        self.infoTable.setVisible(True)
-        self.noduleImage.setVisible(True)
-        self.goBlocLeftButton.setVisible(True)
-        self.goBlocRightButton.setVisible(True)
         self.actionReset_Zoom.setEnabled(False)
 
-        self.nodulesList.setStyleSheet('font: 75 12pt "Verdana"')
+        if len(self.coords) > 0:
+            self.metaTitle.setVisible(True)
+            self.nodulesList.setVisible(True)
+            self.metaDataIcon.setVisible(True)
+            self.informationsLabel.setVisible(True)
+            self.informationsIcon.setVisible(True)
+            self.infoTable.setVisible(True)
+            self.noduleImage.setVisible(True)
+            self.goBlocLeftButton.mousePressEvent = self.slideLeftBloc
+            self.goBlocRightButton.mousePressEvent = self.slideRightBloc
+            self.nodulesList.setStyleSheet('font: 75 12pt "Verdana"')
+        else:
+            self.emptydata.setVisible(True)
+            self.notFound.setVisible(True)
+
+        
 
         self.actionNext_Slice.triggered.connect(self.slideRight)
         self.actionLeft_Slice.triggered.connect(self.slideLeft)
@@ -612,8 +661,7 @@ class DetectionScreen(QMainWindow):
         self.actionZoom_In.triggered.connect(self.zoomIn)
         self.actionReset_Zoom.triggered.connect(self.zoomReset)
         self.actionView_3D_scan.triggered.connect(self.goTo3D)
-        self.goBlocLeftButton.mousePressEvent = self.slideLeftBloc
-        self.goBlocRightButton.mousePressEvent = self.slideRightBloc
+
 
     def slideLeftBloc(self,eve):
         self.indexBloc = max(0,self.indexBloc-1)
@@ -790,6 +838,8 @@ class DetectionScreen(QMainWindow):
         self.nodulesList.itemClicked.connect(self.setInfoTable)
     
     def setInfoTable(self,item):
+        self.goBlocLeftButton.setVisible(True)
+        self.goBlocRightButton.setVisible(True)
         self.noduleBloc = None
         self.infoTable.clear()
         self.infoTable.setRowCount(0)
@@ -844,6 +894,7 @@ class DetectionThreadClass(QtCore.QThread):
     any_signal = QtCore.pyqtSignal(object)
     def __init__(self, scan,path,parent=None):
         super(DetectionThreadClass,self).__init__(parent)
+        self.is_running = True
         self.scan = scan
         self.name = path.split("/")[-1] if ".mhd" not in path else path.split("/")[-1].split(".")[0]
 
@@ -872,10 +923,18 @@ class DetectionThreadClass(QtCore.QThread):
         if isExistClass:
             all_models_results = np.load(outputFolder+"/"+self.name+"_class.npy",allow_pickle=True)
         else:
-            all_models_results = getClassification(list_coords,self.scan)
-            np.save(os.path.join(outputFolder,self.name+"_class.npy"),all_models_results)
+            if(len(list_coords) > 0):
+                all_models_results = getClassification(list_coords,self.scan)
+                np.save(os.path.join(outputFolder,self.name+"_class.npy"),all_models_results)
+            else:
+                all_models_results = []
         print("End Classification")
         self.any_signal.emit((list_coords,all_models_results))
+    
+    def stop(self):
+        self.is_running = False
+        self.terminate()
+        print("stop")
 
 # main
 app = QApplication(sys.argv)
