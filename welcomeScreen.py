@@ -1,3 +1,4 @@
+from operator import index
 import sys
 import time
 from PyQt5 import QtWidgets, QtCore
@@ -533,6 +534,8 @@ class DetectionScreen(QMainWindow):
         self.coords = None
         self.classifications = None
         self.img3D = None
+        self.noduleBloc = None
+        self.indexBloc = 0
         
         self.threadDetect = DetectionThreadClass(self.scan,self.path,parent=None)
         self.threadDetect.start()
@@ -552,6 +555,8 @@ class DetectionScreen(QMainWindow):
         self.informationsIcon.setVisible(False)
         self.infoTable.setVisible(False)
         self.noduleImage.setVisible(False)
+        self.goBlocLeftButton.setVisible(False)
+        self.goBlocRightButton.setVisible(False)
 
 
 
@@ -589,6 +594,8 @@ class DetectionScreen(QMainWindow):
         self.informationsIcon.setVisible(True)
         self.infoTable.setVisible(True)
         self.noduleImage.setVisible(True)
+        self.goBlocLeftButton.setVisible(True)
+        self.goBlocRightButton.setVisible(True)
         self.actionReset_Zoom.setEnabled(False)
 
         self.nodulesList.setStyleSheet('font: 75 12pt "Verdana"')
@@ -605,6 +612,18 @@ class DetectionScreen(QMainWindow):
         self.actionZoom_In.triggered.connect(self.zoomIn)
         self.actionReset_Zoom.triggered.connect(self.zoomReset)
         self.actionView_3D_scan.triggered.connect(self.goTo3D)
+        self.goBlocLeftButton.mousePressEvent = self.slideLeftBloc
+        self.goBlocRightButton.mousePressEvent = self.slideRightBloc
+
+    def slideLeftBloc(self,eve):
+        self.indexBloc = max(0,self.indexBloc-1)
+        self.updateBloc()
+
+    def slideRightBloc(self,eve):
+        self.indexBloc += 1
+        if(self.indexBloc >= self.noduleBloc.shape[0]):
+            self.indexBloc = 0
+        self.updateBloc()
 
     def loadInfos(self):
         img3D = np.zeros((self.scan.shape[1],self.scan.shape[2],self.scan.shape[3],3),dtype=self.scan.dtype)
@@ -703,10 +722,19 @@ class DetectionScreen(QMainWindow):
         self.actionReset_Zoom.setEnabled(True)
         self.updateImage()
     
-    def cropBloc(self,cm,ratio):
+    def cropBloc(self,cm,dm,ratio):
         rm=ratio//2
+        zm = cm[0] - dm // 2
         xm=cm[2]-rm
         ym=cm[1]-rm
+        if(zm<0):
+            zm=0
+            zmp=dm
+        else:
+            zmp=zm+dm
+            if(zmp>self.labelImage.shape[0]):
+                zmp=self.labelImage.shape[0]
+                zm=zmp-dm
         if(ym<0):
             ym=0
             ymp=ratio
@@ -724,7 +752,7 @@ class DetectionScreen(QMainWindow):
             if(xmp>self.labelImage.shape[2]):
                 xmp=self.labelImage.shape[2]
                 xm=xmp-ratio
-        return [cm[0],ym,xm]
+        return [zm,ym,xm]
 
     def play(self):
         self.actionpause.setEnabled(True)
@@ -762,6 +790,7 @@ class DetectionScreen(QMainWindow):
         self.nodulesList.itemClicked.connect(self.setInfoTable)
     
     def setInfoTable(self,item):
+        self.noduleBloc = None
         self.infoTable.clear()
         self.infoTable.setRowCount(0)
         self.infoTable.setColumnCount(0)
@@ -801,9 +830,13 @@ class DetectionScreen(QMainWindow):
         self.innitIndex = int(data["Slice"])
         self.updateImage()
 
-        coords = self.cropBloc(self.coords[index][ind],128)
-        noduleBloc = np.copy(self.img3D[coords[0]][coords[1]:coords[1]+128,coords[2]:coords[2]+128])
-        pixmap = QImage(noduleBloc, noduleBloc.shape[1], noduleBloc.shape[0], noduleBloc.shape[1]*3, QImage.Format_RGB888)
+        print(self.coords[index][ind])
+        blocCoords = self.cropBloc(self.coords[index][ind],len(self.coords[index]),128)
+        self.noduleBloc = np.copy(self.img3D[blocCoords[0]:blocCoords[0]+len(self.coords[index]),blocCoords[1]:blocCoords[1]+128,blocCoords[2]:blocCoords[2]+128])
+        self.updateBloc()
+    
+    def updateBloc(self):
+        pixmap = QImage(self.noduleBloc[self.indexBloc], self.noduleBloc.shape[2], self.noduleBloc.shape[1], self.noduleBloc.shape[2]*3, QImage.Format_RGB888)
         self.noduleImage.setPixmap(QPixmap.fromImage(pixmap))
         self.noduleImage.setScaledContents(True)
 
