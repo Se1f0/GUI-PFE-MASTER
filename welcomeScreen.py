@@ -1,15 +1,14 @@
-from operator import index
 import sys
 import time
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QDialog, QApplication, QWidget, QFileDialog, QMainWindow, QTableWidgetItem, QTableWidget
+from PyQt5.QtWidgets import QDialog, QApplication, QFileDialog, QMainWindow, QTableWidgetItem, QTableWidget
 from PyQt5 import QtGui
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5 import uic
 from tools import *
 from prepare import preprocessScan
 from scan3dViewer import StlViewer
-from segmentation import getNodulesCoordinates3, get_unet,getWeightsPath,drawAllResults
+from segmentation import getNodulesCoordinates3, get_unet,drawAllResults
 from classification import getClassification
 
 class WelcomeScreen(QDialog):

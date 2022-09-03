@@ -1,18 +1,13 @@
 import os
-from pickletools import uint8
-from turtle import color
 import numpy as np
 from tqdm import tqdm
 import keras.backend as K
 import cv2 as cv
 from keras.models import Model
-from keras.layers import Input,BatchNormalization,Lambda
-from keras.layers import  Dropout, BatchNormalization
-from keras.layers.core import Dropout, Lambda
-from keras.layers import Input, Conv3D, MaxPooling3D, Dropout, BatchNormalization
+# from keras.layers.core import Dropout, Lambda
+from keras.layers import Input, Conv3D, MaxPooling3D, Dropout, BatchNormalization, Lambda, UpSampling3D, concatenate
 import tensorflow as tf
 from volumentations import *
-from keras.layers import Input, Conv3D, MaxPooling3D, UpSampling3D, concatenate
 
 
 INPUT_WIDTH=64

@@ -1,4 +1,3 @@
-from plistlib import load
 import SimpleITK as sitk
 import numpy as np
 import cv2 as cv

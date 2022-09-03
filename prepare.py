@@ -2,7 +2,7 @@ import os
 import numpy as np
 import warnings
 import time
-from tools import resample,worldToVoxelCoord,load_itk_image,process_mask,lumTrans,load_dicom_scan,get_pixels_hu,binarize_per_slice,all_slice_analysis,fill_hole,two_lung_only
+from tools import resample,load_itk_image,process_mask,lumTrans,load_dicom_scan,get_pixels_hu,binarize_per_slice,all_slice_analysis,fill_hole,two_lung_only
 
 def step1_python(case_path):
     case = load_dicom_scan(case_path)
