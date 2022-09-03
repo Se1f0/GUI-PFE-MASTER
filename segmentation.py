@@ -4,7 +4,6 @@ from tqdm import tqdm
 import keras.backend as K
 import cv2 as cv
 from keras.models import Model
-# from keras.layers.core import Dropout, Lambda
 from keras.layers import Input, Conv3D, MaxPooling3D, Dropout, BatchNormalization, Lambda, UpSampling3D, concatenate
 import tensorflow as tf
 from volumentations import *
