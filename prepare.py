@@ -147,6 +147,3 @@ def preprocessScan(path):
         scan = full_prep(path)
     return scan
 
-
-# if __name__=='__main__':
-#     preprocessScan("E:/PFE/DSB3/stage1/00cba091fa4ad62cc3200a657aeb957e")

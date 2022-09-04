@@ -141,7 +141,6 @@ class ScanViwerScreen(QMainWindow):
         imageRectX,imageRectY = (self.image.x()+self.frame.x(),self.image.y()+self.frame.y()+34)
         if  (event.pos().x() <= imageRectX+512 and event.pos().x() >= imageRectX) and (event.pos().y() <= imageRectY+512 and event.pos().y() >= imageRectY) and self.zooming:
             self.labelImageOriginal = self.labelImage
-            print(event.pos().x()-imageRectX,event.pos().y()-imageRectY)
             self.applyZoomIn((self.innitIndex,event.pos().y()-imageRectY,event.pos().x()-imageRectX),128)
             self.zooming = False
             self.actionZoom_In.setEnabled(False)
@@ -334,7 +333,7 @@ class PlayThread(QtCore.QThread):
         self.is_running = True
     
     def run(self):
-        print("starting")
+        print("Play")
         t0 = int(round(time.time() * 1000))
         fps = 30
         updateFrame = 1000//fps
@@ -351,7 +350,7 @@ class PlayThread(QtCore.QThread):
     def stop(self):
         self.is_running = False
         self.terminate()
-        print("stop")
+        print("Pause")
 
 class ProcessedScanViwerScreen(QMainWindow):
     def __init__(self,path):
@@ -390,7 +389,6 @@ class ProcessedScanViwerScreen(QMainWindow):
         self.verticalSlider.setVisible(False)
 
         self.cancelButton.clicked.connect(self.cancel)
-        print(self.cancelButton.x())
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
         self.widget.setCursor(CURSOR_NEW)
         self.loadingLabel.setText("Preprocessing scan")
@@ -453,11 +451,9 @@ class ProcessedScanViwerScreen(QMainWindow):
         imageRectX,imageRectY = (self.image.x(),self.image.y()+34)
         if  (event.pos().x() <= imageRectX+512 and event.pos().x() >= imageRectX) and (event.pos().y() <= imageRectY+512 and event.pos().y() >= imageRectY) and self.zooming:
             self.labelImageOriginal = self.labelImage
-            print(event.pos().x()-imageRectX,event.pos().y()-imageRectY)
             self.applyZoomIn((self.innitIndex,event.pos().y()-imageRectY,event.pos().x()-imageRectX),128)
             self.zooming = False
             self.actionZoom_In.setEnabled(False)
-            print(self.labelImage.shape)
     
     def zoomReset(self):
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
@@ -613,7 +609,6 @@ class DetectionScreen(QMainWindow):
     def getThreadResults(self,data):
         self.coords = data[0]
         self.classifications = data[1]
-        print(len(self.coords),len(self.classifications))
 
         self.loading.setVisible(False)
         self.loadingLabel.setVisible(False)
@@ -725,11 +720,9 @@ class DetectionScreen(QMainWindow):
         imageRectX,imageRectY = (self.image.x()+self.frame.x(),self.image.y()+self.frame.y()+34)
         if  (event.pos().x() <= imageRectX+512 and event.pos().x() >= imageRectX) and (event.pos().y() <= imageRectY+512 and event.pos().y() >= imageRectY) and self.zooming:
             self.labelImageOriginal = self.labelImage
-            print(event.pos().x()-imageRectX,event.pos().y()-imageRectY)
             self.applyZoomIn((self.innitIndex,event.pos().y()-imageRectY,event.pos().x()-imageRectX),128)
             self.zooming = False
             self.actionZoom_In.setEnabled(False)
-            print(self.labelImage.shape)
     
     def zoomReset(self):
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.ArrowCursor)
@@ -879,7 +872,6 @@ class DetectionScreen(QMainWindow):
         self.innitIndex = int(data["Slice"])
         self.updateImage()
 
-        print(self.coords[index][ind])
         blocCoords = self.cropBloc(self.coords[index][ind],len(self.coords[index]),128)
         self.noduleBloc = np.copy(self.img3D[blocCoords[0]:blocCoords[0]+len(self.coords[index]),blocCoords[1]:blocCoords[1]+128,blocCoords[2]:blocCoords[2]+128])
         self.updateBloc()
@@ -909,7 +901,6 @@ class DetectionThreadClass(QtCore.QThread):
             choix1='20'
             choix2='20_1'
             dirpath='Segmentation/segmentation weights 1/3d_segmentation_false_all_16_0.0003_after_t3.h5'
-            # weights_segmentation_best,weights_segmentation_after = getWeightsPath(dirpath,choix_lr,choix1,choix2)
             weights_segmentation_after = dirpath
             model=get_unet()
             model.load_weights(weights_segmentation_after) 

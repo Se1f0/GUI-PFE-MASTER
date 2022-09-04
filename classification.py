@@ -105,18 +105,14 @@ def getWeightsPath(md,nb,after_best,dirpath2):
     for x in list1:
         if(x==md):
             path2=os.path.join(dirpath2,x)
-            #print(path2)
             for x1 in os.listdir(path2):
                 if('.zip' not in x1):
-                    print(x1)
                     if(after_best=='after'):
                         if(after_best in x1 and nb in x1):
                             weights_classification=os.path.join(path2,x1)
-                            #print(weights_classification)   
                     else:
                         if('after' not in x1 and nb in x1):
                             weights_classification=os.path.join(path2,x1)
-                            #print(weights_classification)    
     return weights_classification
 
 def get3dBlock(img,cm):
@@ -159,12 +155,10 @@ def predict(model0,img,coord):
     z=coords[0]
     y=coords[1]
     x=coords[2]
-    #print(coords)
     block=img[0][z:z+64,y:y+64,x:x+64]
     rgb_block=Load3dBlock(block)
     X=np.zeros((1,64,64,64,3),dtype=np.uint8)
     X[0]=rgb_block
-    #plot3dBlock(block)
     y_predicted= model0.predict(X)
     y_predicted2=np.argmax(y_predicted,1)
     y_predicted3=[np.round(y_predicted[0][0],4),np.round(y_predicted[0][1],4)]
@@ -335,7 +329,6 @@ def getAllClassifications(list_coords,img,model_densenet121,model_resnet50,model
         pred["InceptionResNetV2"]=(y2,y)
         res=GetFinalResultsWithThj(elm)
         pred["THJ"]=res
-        #print(nbm,nbb)
         
         if(nbb!=nbm):
             if(nbb>nbm):
@@ -347,7 +340,6 @@ def getAllClassifications(list_coords,img,model_densenet121,model_resnet50,model
         else:
             lres=list(res)
             final_prediction=lres[0]
-            print(lres[0])            
         pred["FinalPrediction"]=final_prediction
         list_preds_per_coords.append(pred)
     return list_preds_per_coords

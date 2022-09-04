@@ -16,13 +16,14 @@ class ThreadClass(QtCore.QThread):
         self.predImg = predImg
 
     def run(self):
-        print("starting")
+        print("Constructing the 3D model")
         data = loadSTL(self.predImg)
         meshdata = gl.MeshData(vertexes=data[0], faces=data[1])
         mesh = gl.GLMeshItem(meshdata=meshdata, smooth=False, drawFaces=True, drawEdges=True, edgeColor=(0.7, 0.7, 0.7, 1))
         mesh.translate(100.0,0.0,0.0)
         mesh.setColor(QtGui.QColor(200, 200, 200))
         self.any_signal.emit(mesh)
+        print("End of the construction")
 
 class StlViewer(QMainWindow):
     def __init__(self,predImg):

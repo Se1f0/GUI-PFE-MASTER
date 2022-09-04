@@ -41,21 +41,15 @@ def findNoduleCoordinatesinBlock(mask,coords,plus=5):
         thresh = cv.threshold(mask[i],0,255,cv.THRESH_OTSU + cv.THRESH_BINARY)[1]
         cnts = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         cnts = cnts[0] if len(cnts) == 2 else cnts[1]
-#         if(len(cnts)>0):
-#             print(i,len(cnts))
         for c in cnts:
             x,y,w,h = cv.boundingRect(c)
             x1=(x,y)
             x2=(x+w//2,y+h//2)
             r=max(w//2+1,h//2+1)
-#             print(x,y,w,h)
-#             print(x1,x2,r)
             coords1=(i,x2[1],x2[0],r)
             coords2=(coords[0]+coords1[0],coords[1]+coords1[1],coords[2]+coords1[2],r)
-#             print(coords,coords1,coords2)
             list_coo1.append(coords1)
             list_coo2.append(coords2)
-#             print()
     return  list_coo1,list_coo2       
 
 def create3dBlock(img,coords,size_3d=64):
@@ -134,7 +128,6 @@ def getAll3dBlocks(img,sp=[32,32,32]):
                 if(xf>img.shape[3]):
                     xf=img.shape[3]
                     x=xf-64
-                #block=img[0][z:z+64,y:y+64,x:x+64]
                 list_coords.append((z,y,x))
 
     return list_coords 
@@ -159,7 +152,6 @@ def drawAllResults(img,list_coords):
         color2 = random.randint(0,len(colorRange)-1)
         color3 = random.randint(0,len(colorRange)-1)
         colorRGB = (int(colorRange[color1]),int(colorRange[color2]),int(colorRange[color3]))
-        print(colorRGB)
         for c1 in list_coords[i]:
             img2[c1[0]] = cv2.circle(img2[c1[0]], (c1[2],c1[1]), c1[3], colorRGB, 1)
     return img2                                         
@@ -184,7 +176,6 @@ def getNodulesCoordinates3(model,img):
     list_coords=getAll3dBlocks(img)
     results_list_coords=[]
 
-    print(len(list_coords))
     for id,c in tqdm(enumerate(list_coords)):
         coords=list_coords[id]
         sample_image=img[0][coords[0]:coords[0]+64,coords[1]:coords[1]+64,coords[2]:coords[2]+64]
@@ -200,9 +191,6 @@ def getNodulesCoordinates3(model,img):
                 block3=img[0][st[0]:st[0]+64,st[1]:st[1]+64,st[2]:st[2]+64]
                 final_block=Load3dBlock(block3)
                 results_list_coords.append(l4)
-    # list_coords2 = findSplitsInListCoords(results_list_coords)
-    # list_coords2 = findSplitsInListCoords(list_coords2)
-    # list_coords2 = findSplitsInListCoords(list_coords2)
     list_coords2 = removeduplicates(results_list_coords)          
     return list_coords2
 
@@ -339,7 +327,6 @@ def getMinMaxListCoords(coords,coords2):
             maxx=c[0]
         if(c[0]<minx):
             minx=c[0]
-    print(minx,maxx)        
     return minx,maxx        
 
 def createNewCoords(coords,coords2,minx,maxx):
