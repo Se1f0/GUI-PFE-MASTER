@@ -600,7 +600,7 @@ class DetectionScreen(QMainWindow):
 
         CURSOR_NEW = QtGui.QCursor(QtCore.Qt.WaitCursor)
         self.widget.setCursor(CURSOR_NEW)
-        self.loadingLabel.setText("Detection nodules\n     Please wait")
+        self.loadingLabel.setText("Detecting nodules\n     Please wait")
         self.loadingLabel.adjustSize()
         movie = QtGui.QMovie('assets\loading.gif')
         self.loading.setMovie(movie)
